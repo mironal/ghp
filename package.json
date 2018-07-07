@@ -10,6 +10,7 @@
     "@oclif/command": "1.4.34",
     "@oclif/config": "1.6.33",
     "@oclif/plugin-help": "2.0.5",
+    "@octokit/rest": "15.9.4",
     "tslib": "1.9.3"
   },
   "devDependencies": {
