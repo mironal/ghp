@@ -1,1 +1,1 @@
-console.log("hello ₍₍ (ง ˙ω˙)ว ⁾⁾")
+export {run} from '@oclif/command'
