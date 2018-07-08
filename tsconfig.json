@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+      "lib": [
+          "es2015",
+          "es2016",
+          "es2017"
+
+      ],
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
@@ -8,7 +14,8 @@
     "rootDirs": [ "./src" ],
     "strict": true,
     "target": "es2017",
-    "typeRoots": [ "./node_modules/@types" ]
+    "typeRoots": [ "./node_modules/@types" ],
+    "esModuleInterop": true,
   },
   "include": [
     "./src/**/*"

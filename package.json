@@ -11,6 +11,8 @@
     "@oclif/config": "1.6.33",
     "@oclif/plugin-help": "2.0.5",
     "@octokit/rest": "15.9.4",
+    "@types/shelljs": "0.8.0",
+    "shelljs": "0.8.2",
     "tslib": "1.9.3"
   },
   "devDependencies": {
@@ -48,6 +50,7 @@
   },
   "repository": "mironal/ghp",
   "scripts": {
+    "start": "tsc --watch",
     "postpack": "rm -f oclif.manifest.json npm-shrinkwrap.json",
     "posttest": "tsc -p . --noEmit && tslint -p . -t stylish",
     "prepack": "rm -rf lib && tsc && oclif-dev manifest && oclif-dev readme && npm shrinkwrap",
