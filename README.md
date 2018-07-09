@@ -26,7 +26,7 @@ A command line tool for GitHub Projects.
   - `ghp projects create (-—org=<org>) (-—name=<name>) (--body=<body>)`
 
 - Update a project
-  - `ghp projects update (--name=<name>)  (--body=<body>)  --state`
+  - `ghp projects update (--name=<name>) (--body=<body>) --state`
 
 - Delete a project
   - `ghp projects delete (--project=<project-id>)`

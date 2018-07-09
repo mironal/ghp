@@ -1,6 +1,10 @@
 import { flags } from "@oclif/command"
 import AuthCommand from "../../base"
-import { format, reporterFlag } from "../../github/reporter"
+import {
+  format,
+  reporterFlag,
+  formatSingleProject,
+} from "../../github/reporter"
 
 export default class ProjectsGet extends AuthCommand {
   static description = "describe the command here"
@@ -27,13 +31,6 @@ export default class ProjectsGet extends AuthCommand {
       })
       .catch(this.error)
 
-    this.log(
-      format<{ [key: string]: string }>(resp.data, flags.reporter!, data => {
-        return Object.keys(data)
-          .filter(key => !["creator"].includes(key))
-          .map(key => `${key}: ${data[key]}`)
-          .join("\n")
-      }),
-    )
+    this.log(format(resp.data, flags.reporter!, formatSingleProject))
   }
 }

@@ -1,9 +1,18 @@
 import { flags } from "@oclif/command"
 
-type ReporterFn = (data: object) => string
+type FormatterFn<R extends {}> = (data: R) => string
 
-const jsonReporter: ReporterFn = data => JSON.stringify(data)
-const prettyJsonReporter: ReporterFn = data => JSON.stringify(data, null, 2)
+export const formatSingleProject: FormatterFn<{
+  [key: string]: string
+}> = data =>
+  Object.keys(data)
+    .filter(key => !["creator"].includes(key))
+    .map(key => `${key}: ${data[key]}`)
+    .join("\n")
+
+const jsonReporter: FormatterFn<{}> = data => JSON.stringify(data)
+const prettyJsonReporter: FormatterFn<{}> = data =>
+  JSON.stringify(data, null, 2)
 
 const reporterFlagOpt = flags.string({
   description: "A reporter format",

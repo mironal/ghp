@@ -1,6 +1,12 @@
-import { Command, flags } from "@oclif/command"
+import { flags } from "@oclif/command"
+import AuthCommand from "../../base"
+import {
+  format,
+  reporterFlag,
+  formatSingleProject,
+} from "../../github/reporter"
 
-export default class ProjectsCreate extends Command {
+export default class ProjectsCreate extends AuthCommand {
   static description = "describe the command here"
 
   static flags = {
@@ -16,19 +22,33 @@ export default class ProjectsCreate extends Command {
       char: "b",
       description: "name to print",
     }),
+    ...reporterFlag,
   }
 
-  static args = []
+  exec = async (
+    ownerRepo: string | undefined,
+    org: string | undefined,
+    rest: any,
+  ) => {
+    if (ownerRepo) {
+      const [owner, repo] = ownerRepo.split("/")
+      return this.client.projects.createRepoProject({
+        owner,
+        repo,
+        ...rest,
+      })
+    } else if (org) {
+      return this.client.projects.createOrgProject({ org, ...rest })
+    }
+    throw new Error("aaa")
+  }
 
   async run() {
     const { flags } = this.parse(ProjectsCreate)
 
-    const { repo, org, name } = flags
+    const { repo, org, ...rest } = flags
 
-    if (repo) {
-      this.log(`Create a project named ${name} to ${repo} repository.`)
-    } else if (org) {
-      this.log(`Create a project named ${name} to ${org} repository.`)
-    }
+    const resp = await this.exec(repo, org, rest).catch(this.error)
+    this.log(format(resp.data, flags.reporter!, formatSingleProject))
   }
 }
