@@ -1,25 +1,36 @@
-import {Command, flags} from '@oclif/command'
+import { flags } from "@oclif/command"
+import { reporterFlag, format } from "../../github/reporter"
+import AuthCommand from "../../base"
 
-export default class ColumnsList extends Command {
-  static description = 'describe the command here'
+export default class ColumnsList extends AuthCommand {
+  static description = "describe the command here"
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+    help: flags.help({ char: "h" }),
+    project: flags.string({
+      char: "p",
+      required: true,
+    }),
+    ...reporterFlag,
   }
 
-  static args = [{name: 'file'}]
-
   async run() {
-    const {args, flags} = this.parse(ColumnsList)
+    const { flags } = this.parse(ColumnsList)
+    const { project } = flags
 
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/miro/Documents/develop/ghp/src/commands/columns/list.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+    const resp = await this.client.projects
+      .getProjectColumns({
+        id: project,
+        project_id: project,
+      })
+      .catch(this.error)
+
+    this.log(
+      format<Array<{ id: string; name: number }>>(
+        resp.data,
+        flags.reporter!,
+        data => data.map(c => `${c.id}: ${c.name}`).join("\n"),
+      ),
+    )
   }
 }
