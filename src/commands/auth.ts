@@ -1,26 +1,18 @@
 import { Command, flags } from "@oclif/command"
 import cli from "cli-ux"
 
-import {
-  writeAuthToken,
-  authTokenFilepath,
-  readAuthTokenSync,
-} from "../github/auth"
+import { writeAuthToken, authTokenFilepath } from "../github/auth"
 import { createRestClient } from "../github/client"
 
 export default class Auth extends Command {
-  static description = "describe the command here"
+  public static description = "Auth ghp command."
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: "h" }),
     debug: flags.boolean({ hidden: true }),
   }
 
-  static args = []
-
-  async run() {
-    const { args, flags } = this.parse(Auth)
-
+  public async run() {
     const { client, authed } = createRestClient()
     if (authed) {
       const overrite = await cli.confirm(

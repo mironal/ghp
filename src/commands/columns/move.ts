@@ -1,25 +1,38 @@
-import {Command, flags} from '@oclif/command'
+import { flags } from "@oclif/command"
+import AuthCommand from "../../base"
+import { reporterFlag, format, formatSingleColumn } from "../../github/reporter"
 
-export default class ColumnsMove extends Command {
-  static description = 'describe the command here'
+export default class ColumnsMove extends AuthCommand {
+  public static description = "Move a project column"
 
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+  public static flags = {
+    help: flags.help({ char: "h" }),
+    column: flags.string({
+      char: "c",
+      description: "A column ID that you want to move.",
+      required: true,
+    }),
+    position: flags.string({
+      description: "A position of column",
+      options: ["first", "last"], // TODO: after:<column_id>
+      required: true,
+    }),
+    ...reporterFlag,
   }
 
-  static args = [{name: 'file'}]
+  public async run() {
+    const {
+      flags: { column, position, reporter },
+    } = this.parse(ColumnsMove)
 
-  async run() {
-    const {args, flags} = this.parse(ColumnsMove)
+    const resp = await this.client.projects
+      .moveProjectColumn({
+        id: column,
+        column_id: column,
+        position,
+      })
+      .catch(e => this.error(e.message))
 
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/miro/Documents/develop/ghp/src/commands/columns/move.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+    this.log(format(resp.data, reporter!, formatSingleColumn))
   }
 }

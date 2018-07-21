@@ -1,44 +1,55 @@
-import { Command, flags } from "@oclif/command"
+import { flags } from "@oclif/command"
 import AuthCommand from "../../base"
 import { format, reporterFlag } from "../../github/reporter"
-import GitHub from "@octokit/rest"
 
 export default class ProjectsList extends AuthCommand {
-  static description = "describe the command here"
+  public static description = "List projects"
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: "h" }),
-    repo: flags.string({
-      char: "r",
-      exclusive: ["org"],
-      description: "a repo name. <owner/repo>",
-    }),
-    org: flags.string({
-      char: "o",
-      exclusive: ["repo"],
-      description: "a organization name",
-    }),
     ...reporterFlag,
   }
 
-  async exec(ownerRepo: string | undefined, org: string | undefined) {
+  public static args = [
+    {
+      name: "repo",
+      required: false,
+      description: "Repository name in `owner/repo` format",
+    },
+    {
+      name: "org",
+      required: false,
+      description: "The name of organization.",
+    },
+  ]
+
+  private async exec(ownerRepo: string | undefined, org: string | undefined) {
     if (ownerRepo) {
       const [owner, repo] = ownerRepo.split("/")
       return this.client.projects.getRepoProjects({ owner, repo })
     } else if (org) {
-      return this.client.projects.getOrgProjects({ org: org })
+      return this.client.projects.getOrgProjects({ org })
     }
-    throw new Error("Missing required flag: --repo or --org")
+    throw new Error(
+      `${ProjectsList.args
+        .map(a => a.name.toUpperCase())
+        .join(" or ")} argument is required.`,
+    )
   }
 
-  async run() {
-    const { flags } = this.parse(ProjectsList)
+  public async run() {
+    const {
+      args,
+      flags: { reporter },
+    } = this.parse(ProjectsList)
 
-    const resp = await this.exec(flags.repo, flags.org).catch(this.error)
+    const { repo, org } = args
+
+    const resp = await this.exec(repo, org).catch(e => this.error(e.message))
     this.log(
       format<Array<{ name: string; id: number }>>(
         resp.data,
-        flags.reporter!,
+        reporter!,
         data => {
           return data.map(p => `${p.id}: ${p.name}`).join("\n")
         },

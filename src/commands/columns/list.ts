@@ -1,35 +1,35 @@
 import { flags } from "@oclif/command"
-import { reporterFlag, format } from "../../github/reporter"
+import { reporterFlag, format, formatSingleColumn } from "../../github/reporter"
 import AuthCommand from "../../base"
 
 export default class ColumnsList extends AuthCommand {
-  static description = "describe the command here"
+  public static description = "List columns in a project."
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: "h" }),
     project: flags.string({
       char: "p",
+      description: "A project ID that you want to show list of columns.",
       required: true,
     }),
     ...reporterFlag,
   }
 
-  async run() {
-    const { flags } = this.parse(ColumnsList)
-    const { project } = flags
+  public async run() {
+    const {
+      flags: { project, reporter },
+    } = this.parse(ColumnsList)
 
     const resp = await this.client.projects
       .getProjectColumns({
         id: project,
         project_id: project,
       })
-      .catch(this.error)
+      .catch(e => this.error(e.message))
 
     this.log(
-      format<Array<{ id: string; name: number }>>(
-        resp.data,
-        flags.reporter!,
-        data => data.map(c => `${c.id}: ${c.name}`).join("\n"),
+      format<Array<{ id: number; name: string }>>(resp.data, reporter!, data =>
+        data.map(formatSingleColumn).join("\n"),
       ),
     )
   }

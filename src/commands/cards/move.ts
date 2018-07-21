@@ -1,25 +1,43 @@
-import {Command, flags} from '@oclif/command'
+import { flags } from "@oclif/command"
+import AuthCommand from "../../base"
+import { reporterFlag, format, formatSingleCard } from "../../github/reporter"
 
-export default class CardsMove extends Command {
-  static description = 'describe the command here'
+export default class CardsMove extends AuthCommand {
+  public static description = "Move a project card."
 
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+  public static flags = {
+    help: flags.help({ char: "h" }),
+    card: flags.string({
+      char: "c",
+      description: "A card ID that you want to move",
+      required: true,
+    }),
+    column: flags.integer({
+      description: "A column ID of a culumn in the same project",
+    }),
+    position: flags.string({
+      char: "p",
+      description: "A position of card.",
+      required: true,
+      options: ["top", "bottom"], // TODO: after:<card_id>
+    }),
+    ...reporterFlag,
   }
 
-  static args = [{name: 'file'}]
+  public async run() {
+    const {
+      flags: { card, column, position, reporter },
+    } = this.parse(CardsMove)
 
-  async run() {
-    const {args, flags} = this.parse(CardsMove)
+    const resp = await this.client.projects
+      .moveProjectCard({
+        id: card,
+        card_id: card,
+        column_id: column,
+        position,
+      })
+      .catch(e => this.error(e.message))
 
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/miro/Documents/develop/ghp/src/commands/cards/move.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+    this.log(format(resp.data, reporter!, formatSingleCard))
   }
 }

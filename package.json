@@ -1,5 +1,5 @@
 {
-  "name": "ghp",
+  "name": "@mironal/ghp",
   "version": "0.0.0",
   "author": "mironal @mironal",
   "bin": {
@@ -22,8 +22,10 @@
     "@types/mocha": "5.2.4",
     "@types/node": "10.5.2",
     "globby": "8.0.1",
+    "jest": "23.4.1",
     "ts-node": "6.2.0",
     "tslint": "5.10.0",
+    "tslint-config-prettier": "1.14.0",
     "typescript": "2.9.2"
   },
   "engines": {
@@ -37,7 +39,9 @@
   ],
   "homepage": "https://github.com/mironal/ghp",
   "keywords": [
-    "oclif"
+    "oclif",
+    "github",
+    "cli"
   ],
   "license": "MIT",
   "main": "lib/index.js",
@@ -46,7 +50,18 @@
     "bin": "ghp",
     "plugins": [
       "@oclif/plugin-help"
-    ]
+    ],
+    "topics": {
+      "projects": {
+        "description": "List, get, create, update or delete project."
+      },
+      "columns": {
+        "description": "List, get, create, update, move or delete column."
+      },
+      "cards": {
+        "description": "List, get, create, update, move or delete card."
+      }
+    }
   },
   "repository": "mironal/ghp",
   "scripts": {

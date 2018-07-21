@@ -1,25 +1,56 @@
-import {Command, flags} from '@oclif/command'
+import { flags } from "@oclif/command"
+import AuthCommand from "../../base"
+import { reporterFlag, formatSingleCard, format } from "../../github/reporter"
 
-export default class CardsUpdate extends Command {
-  static description = 'describe the command here'
+export default class CardsUpdate extends AuthCommand {
+  public static description = "Update a project card."
 
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+  public static flags = {
+    help: flags.help({ char: "h" }),
+    card: flags.string({
+      char: "c",
+      description: "A card ID that you want to update",
+      required: true,
+    }),
+    note: flags.string({
+      char: "n",
+      description:
+        "The card's note content. This cannot be specified if the card already has a `content_id` and `content_type`.",
+    }),
+    archived: flags.boolean({
+      char: "a",
+      description: "To archive a project card.",
+      exclusive: ["unarchived"],
+    }),
+    unarchived: flags.boolean({
+      char: "u",
+      description: "To unarchive a project card.",
+      exclusive: ["archived"],
+    }),
+    ...reporterFlag,
   }
 
-  static args = [{name: 'file'}]
+  public async run() {
+    const {
+      flags: { card, note, archived, unarchived, reporter },
+    } = this.parse(CardsUpdate)
 
-  async run() {
-    const {args, flags} = this.parse(CardsUpdate)
-
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/miro/Documents/develop/ghp/src/commands/cards/update.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
+    let archivedOption: boolean | undefined
+    if (archived) {
+      archivedOption = true
+    } else if (unarchived) {
+      archivedOption = false
     }
+
+    const resp = await this.client.projects
+      .updateProjectCard({
+        id: card,
+        card_id: card,
+        note,
+        archived: archivedOption,
+      })
+      .catch(e => this.error(e.message))
+
+    this.log(format(resp.data, reporter!, formatSingleCard))
   }
 }

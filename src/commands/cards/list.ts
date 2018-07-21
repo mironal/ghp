@@ -1,22 +1,23 @@
 import { flags } from "@oclif/command"
-import { reporterFlag, format } from "../../github/reporter"
+import { reporterFlag, format, formatSingleCard } from "../../github/reporter"
 import AuthCommand from "../../base"
 import URL from "url"
-interface ResolveableCard {
-  id: number
-  note?: string
-  content_url?: string
-  issue?: { number: number; title: string; assignees: { login: string }[] } // trick !
-}
+import { ResolveableCard } from "../../type"
 
 export default class CardsList extends AuthCommand {
-  static description = "describe the command here"
+  public static description = "List project cards"
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: "h" }),
     column: flags.string({
       char: "c",
       required: true,
+    }),
+    archived_state: flags.string({
+      description:
+        "Filters the project cards that are returned by the card's state. ",
+      options: ["all", "archived", "not_archived"],
+      default: "not_archived",
     }),
     exclude: flags.string({
       char: "e",
@@ -30,18 +31,19 @@ export default class CardsList extends AuthCommand {
     ...reporterFlag,
   }
 
-  async run() {
-    const { flags } = this.parse(CardsList)
-
-    const { column, reporter, resolve, exclude } = flags
+  public async run() {
+    const {
+      flags: { column, archived_state, reporter, resolve, exclude },
+    } = this.parse(CardsList)
 
     const resp = await this.client.projects
       .getProjectCards({
         column_id: column,
+        archived_state,
       })
-      .catch(this.error)
+      .catch(e => this.error(e.message))
 
-    let data = resp.data as Array<ResolveableCard>
+    let data = resp.data as ResolveableCard[]
 
     if (exclude && exclude.length > 0) {
       data = data.filter(c => {
@@ -59,13 +61,13 @@ export default class CardsList extends AuthCommand {
       data = await Promise.all(
         data.map(async c => {
           if (c.content_url) {
-            const [__, repos, owner, repo, issues, number] = URL.parse(
+            const [__, ___, owner, repo, ____, num] = URL.parse(
               c.content_url,
             ).pathname!.split("/")
             const issue = await this.client.issues.get({
               owner,
               repo,
-              number: parseInt(number, 10),
+              number: parseInt(num, 10),
             })
 
             c.issue = issue.data
@@ -76,23 +78,9 @@ export default class CardsList extends AuthCommand {
       )
     }
 
-    const pretty = (card: ResolveableCard): string => {
-      if (card.note) {
-        return `${card.id}: ${card.note}`
-      } else if (card.content_url) {
-        if (card.issue) {
-          return `${card.id}: ${card.issue.title} #${
-            card.issue.number
-          } ${card.issue.assignees.map(a => `@${a.login}`).join(" ")}`
-        }
-        return `${card.id}: ${card.content_url}`
-      }
-      return `${card.id}: Invalid response`
-    }
-
     this.log(
-      format<Array<ResolveableCard>>(data, reporter!, data =>
-        data.map(pretty).join("\n"),
+      format<ResolveableCard[]>(data, reporter!, d =>
+        d.map(formatSingleCard).join("\n"),
       ),
     )
   }

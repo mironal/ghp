@@ -1,25 +1,32 @@
-import {Command, flags} from '@oclif/command'
+import { flags } from "@oclif/command"
+import AuthCommand from "../../base"
+import { reporterFlag, format } from "../../github/reporter"
 
-export default class CardsDelete extends Command {
-  static description = 'describe the command here'
+export default class CardsDelete extends AuthCommand {
+  public static description = "Delete a project card."
 
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+  public static flags = {
+    help: flags.help({ char: "h" }),
+    card: flags.string({
+      char: "c",
+      description: "A card ID that you want to delete",
+      required: true,
+    }),
+    ...reporterFlag,
   }
 
-  static args = [{name: 'file'}]
+  public async run() {
+    const {
+      flags: { card, reporter },
+    } = this.parse(CardsDelete)
 
-  async run() {
-    const {args, flags} = this.parse(CardsDelete)
+    const resp = await this.client.projects
+      .deleteProjectCard({
+        id: card,
+        card_id: card,
+      })
+      .catch(e => this.error(e.message))
 
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/miro/Documents/develop/ghp/src/commands/cards/delete.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+    this.log(format(resp.data, reporter!, "Deleted"))
   }
 }

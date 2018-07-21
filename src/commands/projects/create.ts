@@ -7,25 +7,37 @@ import {
 } from "../../github/reporter"
 
 export default class ProjectsCreate extends AuthCommand {
-  static description = "describe the command here"
+  public static description =
+    "Create the project in your repository or organization."
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: "h" }),
-    repo: flags.string({ char: "r", description: "name to print" }),
-    org: flags.string({ char: "o", description: "name to print" }),
     name: flags.string({
       char: "n",
-      description: "name to print",
+      description: "The name of project.",
       required: true,
     }),
     body: flags.string({
       char: "b",
-      description: "name to print",
+      description: "The body of the project.",
     }),
     ...reporterFlag,
   }
 
-  exec = async (
+  public static args = [
+    {
+      name: "repo",
+      required: false,
+      description: "Repository name in `owner/repo` format",
+    },
+    {
+      name: "org",
+      required: false,
+      description: "The name of organization.",
+    },
+  ]
+
+  private exec = async (
     ownerRepo: string | undefined,
     org: string | undefined,
     rest: any,
@@ -40,15 +52,24 @@ export default class ProjectsCreate extends AuthCommand {
     } else if (org) {
       return this.client.projects.createOrgProject({ org, ...rest })
     }
-    throw new Error("aaa")
+    throw new Error(
+      `${ProjectsCreate.args
+        .map(a => a.name.toUpperCase())
+        .join(" or ")} argument is required.`,
+    )
   }
 
-  async run() {
-    const { flags } = this.parse(ProjectsCreate)
+  public async run() {
+    const {
+      args,
+      flags: { reporter, ...rest },
+    } = this.parse(ProjectsCreate)
 
-    const { repo, org, ...rest } = flags
+    const { repo, org } = args
 
-    const resp = await this.exec(repo, org, rest).catch(this.error)
-    this.log(format(resp.data, flags.reporter!, formatSingleProject))
+    const resp = await this.exec(repo, org, rest).catch(e =>
+      this.error(e.message),
+    )
+    this.log(format(resp.data, reporter!, formatSingleProject))
   }
 }

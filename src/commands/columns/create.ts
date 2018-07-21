@@ -1,25 +1,38 @@
-import {Command, flags} from '@oclif/command'
+import { flags } from "@oclif/command"
+import { reporterFlag, format, formatSingleColumn } from "../../github/reporter"
+import AuthCommand from "../../base"
 
-export default class ColumnsCreate extends Command {
-  static description = 'describe the command here'
+export default class ColumnsCreate extends AuthCommand {
+  public static description = "Create a project column."
 
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+  public static flags = {
+    help: flags.help({ char: "h" }),
+    project: flags.string({
+      char: "p",
+      description: "A project ID that you want to create column.",
+      required: true,
+    }),
+    name: flags.string({
+      char: "n",
+      description: "A name of column.",
+      required: true,
+    }),
+    ...reporterFlag,
   }
 
-  static args = [{name: 'file'}]
+  public async run() {
+    const {
+      flags: { project, name, reporter },
+    } = this.parse(ColumnsCreate)
 
-  async run() {
-    const {args, flags} = this.parse(ColumnsCreate)
+    const resp = await this.client.projects
+      .createProjectColumn({
+        project_id: project,
+        id: project,
+        name,
+      })
+      .catch(e => this.error(e.message))
 
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from /Users/miro/Documents/develop/ghp/src/commands/columns/create.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+    this.log(format(resp.data, reporter!, formatSingleColumn))
   }
 }
