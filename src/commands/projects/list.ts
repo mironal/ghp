@@ -12,29 +12,19 @@ export default class ProjectsList extends AuthCommand {
 
   public static args = [
     {
-      name: "repo",
-      required: false,
-      description: "Repository name in `owner/repo` format",
-    },
-    {
-      name: "org",
-      required: false,
-      description: "The name of organization.",
+      name: "target",
+      required: true,
+      description:
+        "Repository name in `owner/repo` format or the name of organization.",
     },
   ]
 
-  private async exec(ownerRepo: string | undefined, org: string | undefined) {
-    if (ownerRepo) {
-      const [owner, repo] = ownerRepo.split("/")
+  private async exec(target: string) {
+    if (target.includes("/")) {
+      const [owner, repo] = target.split("/")
       return this.client.projects.getRepoProjects({ owner, repo })
-    } else if (org) {
-      return this.client.projects.getOrgProjects({ org })
     }
-    throw new Error(
-      `${ProjectsList.args
-        .map(a => a.name.toUpperCase())
-        .join(" or ")} argument is required.`,
-    )
+    return this.client.projects.getOrgProjects({ org: target })
   }
 
   public async run() {
@@ -43,9 +33,9 @@ export default class ProjectsList extends AuthCommand {
       flags: { reporter },
     } = this.parse(ProjectsList)
 
-    const { repo, org } = args
+    const { target } = args
 
-    const resp = await this.exec(repo, org).catch(e => this.error(e.message))
+    const resp = await this.exec(target).catch(e => this.error(e.message))
     this.log(
       format<Array<{ name: string; id: number }>>(
         resp.data,

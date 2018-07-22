@@ -26,37 +26,24 @@ export default class ProjectsCreate extends AuthCommand {
 
   public static args = [
     {
-      name: "repo",
-      required: false,
-      description: "Repository name in `owner/repo` format",
-    },
-    {
-      name: "org",
-      required: false,
-      description: "The name of organization.",
+      name: "target",
+      required: true,
+      description:
+        "Repository name in `owner/repo` format or the name of organization.",
     },
   ]
 
-  private exec = async (
-    ownerRepo: string | undefined,
-    org: string | undefined,
-    rest: any,
-  ) => {
-    if (ownerRepo) {
-      const [owner, repo] = ownerRepo.split("/")
+  private exec = async (target: string, rest: any) => {
+    if (target.includes("/")) {
+      const [owner, repo] = target.split("/")
       return this.client.projects.createRepoProject({
         owner,
         repo,
         ...rest,
       })
-    } else if (org) {
-      return this.client.projects.createOrgProject({ org, ...rest })
+    } else {
+      return this.client.projects.createOrgProject({ org: target, ...rest })
     }
-    throw new Error(
-      `${ProjectsCreate.args
-        .map(a => a.name.toUpperCase())
-        .join(" or ")} argument is required.`,
-    )
   }
 
   public async run() {
@@ -65,11 +52,9 @@ export default class ProjectsCreate extends AuthCommand {
       flags: { reporter, ...rest },
     } = this.parse(ProjectsCreate)
 
-    const { repo, org } = args
+    const { target } = args
 
-    const resp = await this.exec(repo, org, rest).catch(e =>
-      this.error(e.message),
-    )
+    const resp = await this.exec(target, rest).catch(e => this.error(e.message))
     this.log(format(resp.data, reporter!, formatSingleProject))
   }
 }
