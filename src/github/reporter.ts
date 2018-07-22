@@ -21,9 +21,9 @@ export const formatSingleCard: FormatterFn<ResolveableCard> = data => {
     return `${data.id}: ${data.note}`
   } else if (data.content_url) {
     if (data.issue) {
-      return `${data.id}: ${data.issue.title} #${
-        data.issue.number
-      } ${data.issue.assignees.map(a => `@${a.login}`).join(" ")}`
+      return `${data.id}: ${data.issue.title} #${data.issue.number} (${
+        data.issue.id
+      }) ${data.issue.assignees.map(a => `@${a.login}`).join(" ")}`
     }
     return `${data.id}: ${data.content_url}`
   }
