@@ -1,10 +1,10 @@
 import { flags } from "@oclif/command"
-import GitHub from "@octokit/rest"
 import AuthCommand from "../base"
 import cli from "cli-ux"
-import { PerformanceObserver } from "perf_hooks"
-import ColumnsCreate from "./columns/create"
 
+const isDefined = <A>(input: A | undefined | null): input is A => {
+  return !!input
+}
 interface PartialIssue {
   id: number
   number: number
@@ -48,15 +48,16 @@ export default class Copy extends AuthCommand {
       .filter((c: any) => typeof c.content_url === "string")
       .map((c: any) => c.content_url) as string[]
 
-    const issues: PartialIssue[] = []
-    for (const url of contentURLs) {
-      const tokens = url.split("/")
-      const num = tokens.pop()
-      tokens.pop()
-      const repo = tokens.pop()
-      const owner = tokens.pop()
-
-      if (num && owner && repo) {
+    const issues = await Promise.all(
+      contentURLs.map(async url => {
+        const tokens = url.split("/")
+        const num = tokens.pop()
+        tokens.pop()
+        const repo = tokens.pop()
+        const owner = tokens.pop()
+        if (!num || !repo || !owner) {
+          return undefined
+        }
         const {
           data: { title, id },
         } = await this.client.issues.get({
@@ -64,9 +65,10 @@ export default class Copy extends AuthCommand {
           repo,
           number: parseInt(num, 10),
         })
-        issues.push({ title, number: parseInt(num, 10), id: parseInt(id, 10) })
-      }
-    }
+        return { title, number: parseInt(num, 10), id: parseInt(id, 10) }
+      }),
+    ).then(is => is.filter(isDefined))
+
     return {
       columnName,
       issues,
